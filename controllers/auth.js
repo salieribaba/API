@@ -87,3 +87,33 @@ export const login = async (req, res) => {
 export const secret = async (req, res) => {
   res.json({ currentUser: req.user });
 };
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, password, address } = req.body;
+    const user = await User.findById(req.user._id);
+    // check password length
+    if (password && password.length < 6) {
+      return res.json({
+        error: "Şifre fereklidir! En az 6 karakter olmalıdır!",
+      });
+    }
+    // hash the password
+    const hashedPassword = password ? await hashPassword(password) : undefined;
+
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        name: name || user.name,
+        password: hashedPassword || user.password,
+        address: address || user.address,
+      },
+      { new: true }
+    );
+
+    updated.password = undefined;
+    res.json(updated);
+  } catch (err) {
+    console.log(err);
+  }
+};

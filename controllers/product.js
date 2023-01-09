@@ -1,6 +1,7 @@
 import Product from "../models/product.js";
 import fs from "fs";
 import slugify from "slugify";
+import Order from "../models/order.js";
 
 //ürünleri category ile birlikte listele
 export const create = async (req, res) => {
@@ -213,6 +214,19 @@ export const relatedProducts = async (req, res) => {
       .limit(3);
 
     res.json(related);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const createOrder = async (req, res) => {
+  try {
+    const order = new Order({
+      products: cart,
+      buyer: req.user._id,
+    });
+    await order.save();
+    res.json(order);
   } catch (err) {
     console.log(err);
   }
