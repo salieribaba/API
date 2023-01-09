@@ -95,7 +95,7 @@ export const updateProfile = async (req, res) => {
     // check password length
     if (password && password.length < 6) {
       return res.json({
-        error: "Şifre fereklidir! En az 6 karakter olmalıdır!",
+        error: "Şifre gereklidir! En az 6 karakter olmalıdır!",
       });
     }
     // hash the password

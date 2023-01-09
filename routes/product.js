@@ -28,6 +28,6 @@ router.get("/products-count", productsCount);
 router.get("/list-products/:page", listProducts);
 router.get("/products/search/:keyword", productsSearch);
 router.get("/related-products/:productId/:categoryId", relatedProducts);
-router.post("/order", requireSignin, createOrder);
+router.post("/create-order", requireSignin, createOrder);
 
 export default router;
