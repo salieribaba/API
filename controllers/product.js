@@ -2,6 +2,11 @@ import Product from "../models/product.js";
 import fs from "fs";
 import slugify from "slugify";
 import Order from "../models/order.js";
+import dotenv from "dotenv";
+import sgMail from "@sendgrid/mail";
+
+dotenv.config();
+sgMail.setApiKey(process.env.SENDGRID_KEY);
 
 //ürünleri category ile birlikte listele
 export const create = async (req, res) => {
@@ -220,12 +225,58 @@ export const relatedProducts = async (req, res) => {
 };
 
 export const createOrder = async (req, res) => {
+  //cart içeriğini al,buyer ile ilişkilendir, order oluştur
   try {
+    const { cart, total } = req.body;
     const order = new Order({
       products: cart,
       buyer: req.user._id,
+      total: total,
     });
     await order.save();
+
+    const bulkOps = cart.map((item) => {
+      return {
+        updateOne: {
+          filter: { _id: item._id },
+          update: { $inc: { quantity: -0, sold: +1 } },
+        },
+      };
+    });
+
+    Product.bulkWrite(bulkOps, {});
+
+    res.json(order);
+  } catch (err) {
+    console.log(err);
+  }
+};
+export const orderStatus = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    const order = await Order.findByIdAndUpdate(orderId, { status })
+      .populate("buyer", "email name")
+      .exec();
+
+    //e-posta hazırla
+    const emailData = {
+      from: process.env.EMAIL_FROM,
+      to: order.buyer.email,
+      subject: "Sipariş durumunuz hk.",
+      html: `
+        <h1>Merhaba ${order.buyer.name}," ${order.id}" nolu siparişiniz  <span style="color:red;">${order.status}</span> durumuna güncellendi.</h1>
+        <p>Daha detaylı bilgi için, <a href="${process.env.CLIENT_URL}/dashboard/user/orders"> kontrol panelinizi </a> ziyaret edebilirsiniz.</p>
+      `,
+    };
+
+    //e-posta gönder
+    try {
+      await sgMail.send(emailData);
+    } catch (err) {
+      console.log(err);
+    }
+
     res.json(order);
   } catch (err) {
     console.log(err);

@@ -11,7 +11,10 @@ const orderSchema = new mongoose.Schema(
       default: "bekliyor",
       enum: ["bekliyor", "işleme alındı", "sevk edildi", "iptal edildi"],
     },
-    payment: {},
+    total: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
