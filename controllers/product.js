@@ -233,6 +233,7 @@ export const createOrder = async (req, res) => {
       buyer: req.user._id,
       total: total,
     });
+
     await order.save();
 
     const bulkOps = cart.map((item) => {
@@ -255,7 +256,11 @@ export const orderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
-    const order = await Order.findByIdAndUpdate(orderId, { status })
+    const order = await Order.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true }
+    )
       .populate("buyer", "email name")
       .exec();
 
